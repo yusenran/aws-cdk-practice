@@ -1,0 +1,22 @@
+{
+  "name": "aws-cdk-practice",
+  "version": "1.0.0",
+  "description": "for practice",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yusenran/aws-cdk-practice.git"
+  },
+  "author": "yusenran",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yusenran/aws-cdk-practice/issues"
+  },
+  "homepage": "https://github.com/yusenran/aws-cdk-practice#readme",
+  "dependencies": {
+    "aws-cdk": "^2.50.0"
+  }
+}
