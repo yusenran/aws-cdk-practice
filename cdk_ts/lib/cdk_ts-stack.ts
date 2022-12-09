@@ -2,13 +2,13 @@ import { Construct } from "constructs";
 import {
   aws_ec2 as ec2,
   aws_iam as iam,
+  aws_lambda as lambda,
+  aws_lambda_nodejs,
   aws_s3 as s3,
   aws_s3_notifications as s3n,
   Stack,
   StackProps,
-  aws_lambda_nodejs,
 } from "aws-cdk-lib";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
 
 export class CdkTsStack extends Stack {
@@ -75,9 +75,9 @@ export class CdkTsStack extends Stack {
       })
     );
 
-    const lambda = new aws_lambda_nodejs.NodejsFunction(this, "tsPutToS3", {
+    const putToS3 = new aws_lambda_nodejs.NodejsFunction(this, "putToS3", {
       entry: path.join(__dirname, "/../../lambda/ts/putToS3.ts"),
-      runtime: Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       handler: "handler",
       depsLockFilePath: path.join(
         __dirname,
@@ -89,23 +89,27 @@ export class CdkTsStack extends Stack {
       role: roleForWrite,
     });
 
-    const copyLmbda = new aws_lambda_nodejs.NodejsFunction(this, "tsCopyToS3", {
-      entry: path.join(__dirname, "/../../lambda/ts/putToS3.ts"),
-      runtime: Runtime.NODEJS_16_X,
-      handler: "handler",
-      depsLockFilePath: path.join(
-        __dirname,
-        "/../../lambda/ts/package-lock.json"
-      ),
-      environment: {
-        BUCKET_NAME: cloneBucket.bucketName,
-      },
-      role: roleForCopy,
-    });
+    const copyfromS3ToS3 = new aws_lambda_nodejs.NodejsFunction(
+      this,
+      "copyfromS3ToS3",
+      {
+        entry: path.join(__dirname, "/../../lambda/ts/putToS3.ts"),
+        runtime: lambda.Runtime.NODEJS_16_X,
+        handler: "handler",
+        depsLockFilePath: path.join(
+          __dirname,
+          "/../../lambda/ts/package-lock.json"
+        ),
+        environment: {
+          BUCKET_NAME: cloneBucket.bucketName,
+        },
+        role: roleForCopy,
+      }
+    );
 
     bucket.addEventNotification(
       s3.EventType.OBJECT_CREATED_PUT,
-      new s3n.LambdaDestination(copyLmbda)
+      new s3n.LambdaDestination(copyfromS3ToS3)
     );
   }
 }
