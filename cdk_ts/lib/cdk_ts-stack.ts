@@ -28,7 +28,7 @@ export class CdkTsStack extends Stack {
       ],
     });
 
-    const roleForRead = new aws_iam.Role(this, "CdkTsPracticeRoleForRead", {
+    const roleForCopy = new aws_iam.Role(this, "CdkTsPracticeRoleForCopy", {
       assumedBy: new aws_iam.ServicePrincipal("lambda.amazonaws.com"),
     });
 
@@ -39,13 +39,16 @@ export class CdkTsStack extends Stack {
     const bucket = new s3.Bucket(this, "CdkTsPracticeBucket", {
       bucketName: "cdk-ts-practice-bucket",
     });
+    const cloneBucket = new s3.Bucket(this, "CdkTsPracticeBucketClone", {
+      bucketName: "cdk-ts-practice-bucket-clone",
+    });
 
     bucket.addToResourcePolicy(
       new aws_iam.PolicyStatement({
         effect: aws_iam.Effect.ALLOW,
         actions: ["s3:GetObject"],
         resources: [bucket.bucketArn + "/*"],
-        principals: [roleForRead],
+        principals: [roleForCopy],
       })
     );
 
@@ -55,6 +58,15 @@ export class CdkTsStack extends Stack {
         actions: ["s3:PutObject"],
         resources: [bucket.bucketArn + "/*"],
         principals: [roleForWrite],
+      })
+    );
+
+    cloneBucket.addToResourcePolicy(
+      new aws_iam.PolicyStatement({
+        effect: aws_iam.Effect.ALLOW,
+        actions: ["s3:PutObject"],
+        resources: [cloneBucket.bucketArn + "/*"],
+        principals: [roleForCopy],
       })
     );
 
@@ -70,6 +82,20 @@ export class CdkTsStack extends Stack {
         BUCKET_NAME: bucket.bucketName,
       },
       role: roleForWrite,
+    });
+
+    const copyLmbda = new aws_lambda_nodejs.NodejsFunction(this, "tsCopyToS3", {
+      entry: path.join(__dirname, "/../../lambda/ts/putToS3.ts"),
+      runtime: Runtime.NODEJS_16_X,
+      handler: "handler",
+      depsLockFilePath: path.join(
+        __dirname,
+        "/../../lambda/ts/package-lock.json"
+      ),
+      environment: {
+        BUCKET_NAME: cloneBucket.bucketName,
+      },
+      role: roleForCopy,
     });
   }
 }
