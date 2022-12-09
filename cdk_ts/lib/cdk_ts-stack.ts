@@ -1,8 +1,13 @@
-import { aws_iam, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import { aws_lambda_nodejs } from "aws-cdk-lib";
+import {
+  aws_ec2 as ec2,
+  aws_iam as iam,
+  aws_s3 as s3,
+  aws_s3_notifications as s3n,
+  Stack,
+  StackProps,
+  aws_lambda_nodejs,
+} from "aws-cdk-lib";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
 
@@ -28,12 +33,12 @@ export class CdkTsStack extends Stack {
       ],
     });
 
-    const roleForCopy = new aws_iam.Role(this, "CdkTsPracticeRoleForCopy", {
-      assumedBy: new aws_iam.ServicePrincipal("lambda.amazonaws.com"),
+    const roleForCopy = new iam.Role(this, "CdkTsPracticeRoleForCopy", {
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
     });
 
-    const roleForWrite = new aws_iam.Role(this, "CdkTsPracticeRoleForWrite", {
-      assumedBy: new aws_iam.ServicePrincipal("lambda.amazonaws.com"),
+    const roleForWrite = new iam.Role(this, "CdkTsPracticeRoleForWrite", {
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
     });
 
     const bucket = new s3.Bucket(this, "CdkTsPracticeBucket", {
@@ -44,8 +49,8 @@ export class CdkTsStack extends Stack {
     });
 
     bucket.addToResourcePolicy(
-      new aws_iam.PolicyStatement({
-        effect: aws_iam.Effect.ALLOW,
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
         actions: ["s3:GetObject"],
         resources: [bucket.bucketArn + "/*"],
         principals: [roleForCopy],
@@ -53,8 +58,8 @@ export class CdkTsStack extends Stack {
     );
 
     bucket.addToResourcePolicy(
-      new aws_iam.PolicyStatement({
-        effect: aws_iam.Effect.ALLOW,
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
         actions: ["s3:PutObject"],
         resources: [bucket.bucketArn + "/*"],
         principals: [roleForWrite],
@@ -62,8 +67,8 @@ export class CdkTsStack extends Stack {
     );
 
     cloneBucket.addToResourcePolicy(
-      new aws_iam.PolicyStatement({
-        effect: aws_iam.Effect.ALLOW,
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
         actions: ["s3:PutObject"],
         resources: [cloneBucket.bucketArn + "/*"],
         principals: [roleForCopy],
@@ -97,5 +102,10 @@ export class CdkTsStack extends Stack {
       },
       role: roleForCopy,
     });
+
+    bucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED_PUT,
+      new s3n.LambdaDestination(copyLmbda)
+    );
   }
 }
