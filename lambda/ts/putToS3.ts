@@ -13,16 +13,25 @@ AWS.config.apiVersions = {
 export const handler = async (event: any) => {
   const client = new S3Client({});
   const params: PutObjectCommandInput = {
-    Bucket: "cdk-ts-practice-bucket",
+    Bucket: process.env.BUCKET_NAME,
     Key: "test.txt",
-    Body: "Hello World!",
+    Body: JSON.stringify(event),
   };
   const putCommand = new PutObjectCommand(params);
-  await client.send(putCommand);
+  try {
+    await client.send(putCommand);
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: err,
+      }),
+    };
+  }
   return {
     statusCode: 200,
     body: JSON.stringify({
-      message: "Hello World!",
+      message: {},
     }),
   };
 };
