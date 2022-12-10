@@ -93,7 +93,7 @@ export class CdkTsStack extends Stack {
       this,
       "copyfromS3ToS3",
       {
-        entry: path.join(__dirname, "/../../lambda/ts/putToS3.ts"),
+        entry: path.join(__dirname, "/../../lambda/ts/copyToS3.ts"),
         runtime: lambda.Runtime.NODEJS_16_X,
         handler: "handler",
         depsLockFilePath: path.join(
@@ -101,7 +101,8 @@ export class CdkTsStack extends Stack {
           "/../../lambda/ts/package-lock.json"
         ),
         environment: {
-          BUCKET_NAME: cloneBucket.bucketName,
+          SRC_BUCKET_NAME: bucket.bucketName,
+          DIST_BUCKET_NAME: cloneBucket.bucketName,
         },
         role: roleForCopy,
       }

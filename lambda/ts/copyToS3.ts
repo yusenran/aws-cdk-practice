@@ -11,13 +11,16 @@ AWS.config.apiVersions = {
 };
 
 export const handler = async (event: any) => {
+  const filename =
+    event.Records[0].s3.object.key + event.Records[0].eventTime + ".json";
+
   const client = new S3Client({});
-  const params: PutObjectCommandInput = {
-    Bucket: process.env.BUCKET_NAME,
-    Key: "test.txt",
+  const paramsFroWrite: PutObjectCommandInput = {
+    Bucket: process.env.DIST_BUCKET_NAME,
+    Key: filename,
     Body: JSON.stringify(event),
   };
-  const putCommand = new PutObjectCommand(params);
+  const putCommand = new PutObjectCommand(paramsFroWrite);
   await client.send(putCommand);
   return {
     statusCode: 200,
