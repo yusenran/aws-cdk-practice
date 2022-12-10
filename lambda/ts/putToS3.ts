@@ -18,7 +18,16 @@ export const handler = async (event: any) => {
     Body: JSON.stringify(event),
   };
   const putCommand = new PutObjectCommand(params);
-  await client.send(putCommand);
+  try {
+    await client.send(putCommand);
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: err,
+      }),
+    };
+  }
   return {
     statusCode: 200,
     body: JSON.stringify({
